@@ -21,8 +21,21 @@
 <div class="ai-input"><input id="aiQuestion" type="text" placeholder="Ask about your reading, relationships, career or future..."><button class="btn" id="sendAi">Send</button></div>
 </div>
 <div class="stats"><div><b>03</b><span>Readings</span></div><div><b>02</b><span>Messages</span></div><div><b>01</b><span>Upcoming</span></div></div>
-<article><h2>Latest message</h2><p>Your personalised consultation message will appear here. Our AI guide can provide an introductory response while your detailed reading is prepared.</p></article>
+<article><h2>My Readings</h2><div id="myServiceReadings"><p>Loading your reading requests…</p></div></article>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script>
-</body></html>
+<script>
+document.addEventListener("DOMContentLoaded",async function(){
+ const sb=window.supabaseClient;if(!sb)return;
+ const root=document.getElementById("myServiceReadings");const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const {data:{user}}=await sb.auth.getUser();if(!user){root.innerHTML="<p>Please log in to view your readings.</p>";return;}
+ const {data,error}=await sb.from("service_requests").select("id,service_name,question,status,pricing_mode,price,fulfillment_mode,ai_answer,admin_answer,customer_answer,created_at").eq("customer_id",user.id).order("created_at",{ascending:false});
+ if(error){root.innerHTML="<p>"+esc(error.message)+"</p>";return;}
+ if(!data?.length){root.innerHTML="<p>No reading requests yet. Return to the home page and choose a service.</p>";return;}
+ root.innerHTML=data.map(r=>{
+   const answer=r.customer_answer||r.admin_answer||r.ai_answer||"Your personalized reading is being prepared.";
+   return '<div style="padding:18px 0;border-bottom:1px solid #e5dceb"><h3 style="margin:0 0 6px">'+esc(r.service_name)+'</h3><p style="color:#6e6676;margin:0 0 8px">'+esc(new Date(r.created_at).toLocaleString())+' • '+esc(r.status)+'</p><p><strong>Your question:</strong> '+esc(r.question)+'</p><div style="white-space:pre-wrap;line-height:1.75;background:#faf7fc;padding:14px;border-radius:10px">'+esc(answer)+'</div></div>';
+ }).join("");
+});
+</script></body></html>
