@@ -108,9 +108,12 @@
       if(reqError) throw reqError;
       box.classList.add("show");
       if(req.first_reading_free||req.price===0){
-        out.innerHTML='<p><strong>Reading request received.</strong></p><p>Your first reading is free and has been placed in the queue. The personalized AI reading will appear in your customer account once processing is completed.</p><p><strong>Request ID:</strong> '+escapeHtml(req.id)+'</p>';
+        out.innerHTML='<p><strong>Reading request received.</strong></p><p>Generating your personalized AI reading…</p><p><strong>Request ID:</strong> '+escapeHtml(req.id)+'</p>';
+        const {data:aiData,error:aiError}=await sb.functions.invoke("generate-reading",{body:{request_id:req.id}});
+        if(aiError||!aiData||!aiData.success) throw new Error(aiData?.error||aiError?.message||"AI reading could not be generated.");
+        out.innerHTML='<p><strong>Your Personalized AI Reading</strong></p><div style="line-height:1.75;white-space:pre-wrap">'+escapeHtml(aiData.answer)+'</div><p style="margin-top:16px"><strong>Request ID:</strong> '+escapeHtml(req.id)+'</p>';
       }else{
-        out.innerHTML='<p><strong>Request created.</strong></p><p>This reading is ₹'+escapeHtml(req.price)+' and is awaiting payment before AI processing.</p><p><strong>Request ID:</strong> '+escapeHtml(req.id)+'</p>';
+        out.innerHTML='<p><strong>Request created.</strong></p><p>This reading is ₹'+escapeHtml(req.price)+' and is awaiting payment before AI processing.</p><p><strong>Request ID:</strong> '+escapeHtml(req.id)+'</p><p style="margin-top:12px"><a href="login.html" style="color:#8b5db5;font-weight:800">Open your customer account</a> after payment to receive the reading.</p>';
       }
     }catch(err){
       box.classList.add("show");
