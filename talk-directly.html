@@ -12,7 +12,16 @@
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function show(msg,type=""){status.className="status "+type;status.textContent=msg;status.classList.remove("hidden");}
 function tick(){const left=Math.max(0,Math.ceil((expires-Date.now())/1000));timer.textContent=String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");if(!left){if(pollTimer)clearInterval(pollTimer);document.getElementById("sendBtn").disabled=true;show("The 10-minute direct conversation has ended.","error");}}
-async function call(body){const {data,error}=await sb.functions.invoke("public-chat",{body});if(error||!data?.success)throw new Error(data?.error||error?.message||"Unable to communicate right now.");return data;}
+async function call(body){
+  const url=window.SUPABASE_URL+"/functions/v1/public-chat";
+  const key=window.SUPABASE_PUBLISHABLE_KEY;
+  if(!url.startsWith("http")||!key)throw new Error("Secure direct communication is not configured. Please refresh the page.");
+  const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","apikey":key,"Authorization":"Bearer "+key},body:JSON.stringify(body)});
+  let data=null;
+  try{data=await response.json();}catch{}
+  if(!response.ok||!data?.success)throw new Error(data?.error||"Unable to communicate right now. Please try again.");
+  return data;
+}
 function render(messages){chat.innerHTML=(messages||[]).map(m=>'<div class="bubble '+(m.sender==="admin"?"admin":"visitor")+'">'+esc(m.message)+'<div class="meta">'+new Date(m.created_at).toLocaleString()+'</div></div>').join("");chat.scrollTop=chat.scrollHeight;}
 async function refresh(){try{const d=await call({action:"get_chat",session_token:token});render(d.messages);}catch(e){}}
 startBtn.addEventListener("click",async()=>{const name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),email=document.getElementById("email").value.trim(),message=document.getElementById("firstMessage").value.trim();if(name.split(/\s+/).length<2){show("Please enter your complete name (first and last name).","error");return;}if(!phone||!email||!message){show("Please complete all required fields.","error");return;}startBtn.disabled=true;startBtn.textContent="Opening…";try{const d=await call({action:"start_chat",name,phone,email,message});token=d.session_token;expires=d.expires_at;startArea.classList.add("hidden");chatArea.classList.remove("hidden");timer.classList.remove("hidden");render(d.messages);setInterval(tick,1000);pollTimer=setInterval(refresh,3000);tick();}catch(e){show(e.message,"error");startBtn.disabled=false;startBtn.textContent="💬 Start Direct Conversation";}});
