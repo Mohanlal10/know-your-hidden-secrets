@@ -1,1 +1,82 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Dashboard</title><link rel="stylesheet" href="styles.css"></head><body><header><h2>KNOW YOUR HIDDEN SECRETS AND FUTURE <small>ADMIN</small></h2></header><main class="dashboard"><aside><h3>Administrator</h3><p>Dashboard</p><p>Customers</p><p>Readings</p><p>Messages</p><p>Settings</p></aside><section><h1>Platform overview</h1><div class="stats"><div><b>128</b> Customers</div><div><b>46</b> Readings</div><div><b>12</b> Pending</div></div><article><h2>Direct messaging</h2><p>Send a configured message by email, SMS or WhatsApp.</p><label>Customer<input placeholder="Email or mobile"></label><label>Channel<select><option>Email</option><option>SMS</option><option>WhatsApp</option></select></label><label>Message<textarea placeholder="Write your message..."></textarea></label><button class="btn" id="sendMessage">Send Message</button><p id="messageStatus"></p></article></section></main><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Administrator Board | Know Your Hidden Secrets and Future</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-page">
+<header class="topbar admin-topbar">
+  <div><h2>☾ KNOW YOUR HIDDEN SECRETS AND FUTURE</h2><span>Administrator Control Board</span></div>
+  <button class="btn secondary" id="adminLogout">Logout</button>
+</header>
+<main class="admin-layout">
+  <aside class="sidebar admin-sidebar">
+    <div class="admin-profile"><div class="admin-avatar">✦</div><div><strong>Administrator</strong><small>Control Center</small></div></div>
+    <button class="admin-nav active" data-section="overview">⌂ Overview</button>
+    <button class="admin-nav" data-section="customers">♙ Customers</button>
+    <button class="admin-nav" data-section="readings">✧ Readings</button>
+    <button class="admin-nav" data-section="messages">✉ Messages</button>
+    <button class="admin-nav" data-section="settings">⚙ Settings</button>
+    <a class="admin-home" href="index.html">← Back to Home</a>
+  </aside>
+
+  <section class="admin-main">
+    <section class="admin-section active" id="overview">
+      <div class="page-heading"><div><span class="eyebrow">ADMINISTRATION</span><h1>Platform Overview</h1><p>Manage customers, readings and direct communication from one place.</p></div><div class="live-badge">● System Ready</div></div>
+      <div class="stats admin-stats">
+        <div><span>♙</span><b>128</b><small>Customers</small></div>
+        <div><span>✧</span><b>46</b><small>Readings</small></div>
+        <div><span>◷</span><b>12</b><small>Pending</small></div>
+        <div><span>✉</span><b id="sentCount">0</b><small>Messages Sent</small></div>
+      </div>
+      <div class="admin-grid">
+        <article class="admin-card"><h2>Quick Actions</h2><div class="quick-actions"><button class="btn" data-open="customers">♙ View Customers</button><button class="btn" data-open="readings">✧ Manage Readings</button><button class="btn" data-open="messages">✉ Send Message</button></div></article>
+        <article class="admin-card"><h2>Administrator Notice</h2><p id="adminNotice">The administrator board is connected to the website interface. Messaging is currently demo/local until a real email, SMS or WhatsApp provider is configured.</p></article>
+      </div>
+    </section>
+
+    <section class="admin-section" id="customers">
+      <div class="page-heading"><div><span class="eyebrow">CUSTOMER MANAGEMENT</span><h1>Customers</h1><p>Review registered customer records.</p></div></div>
+      <article class="admin-card"><div class="table-wrap"><table><thead><tr><th>Customer</th><th>Contact</th><th>Status</th><th>Reading</th></tr></thead><tbody>
+      <tr><td>Arun Sharma</td><td>arun@example.com</td><td><span class="status active-status">Active</span></td><td>Birth Chart</td></tr>
+      <tr><td>Priya Das</td><td>priya@example.com</td><td><span class="status active-status">Active</span></td><td>Love & Marriage</td></tr>
+      <tr><td>Rohan Singh</td><td>+91 98••••••21</td><td><span class="status pending-status">Pending</span></td><td>Career</td></tr>
+      </tbody></table></div></article>
+    </section>
+
+    <section class="admin-section" id="readings">
+      <div class="page-heading"><div><span class="eyebrow">ASTROLOGY SERVICES</span><h1>Readings</h1><p>Track reading requests and their current status.</p></div></div>
+      <div class="reading-list">
+        <article class="admin-card reading-row"><div><strong>Birth Chart Analysis</strong><small>Arun Sharma • 28 Sep 2026</small></div><span class="status active-status">Completed</span></article>
+        <article class="admin-card reading-row"><div><strong>Love & Marriage</strong><small>Priya Das • 29 Sep 2026</small></div><span class="status pending-status">Pending</span></article>
+        <article class="admin-card reading-row"><div><strong>Career Astrology</strong><small>Rohan Singh • 29 Sep 2026</small></div><span class="status pending-status">Pending</span></article>
+      </div>
+    </section>
+
+    <section class="admin-section" id="messages">
+      <div class="page-heading"><div><span class="eyebrow">DIRECT COMMUNICATION</span><h1>Messages</h1><p>Send a message to a customer through the selected channel.</p></div></div>
+      <article class="admin-card message-card">
+        <label>Customer Email or Mobile<input id="adminRecipient" placeholder="customer@email.com or +91 mobile number"></label>
+        <label>Channel<select id="adminChannel"><option>Email</option><option>SMS</option><option>WhatsApp</option></select></label>
+        <label>Message<textarea id="adminMessage" rows="6" placeholder="Write your message..."></textarea></label>
+        <button class="btn" id="sendMessage">✉ Send Message</button>
+        <p id="messageStatus" class="message-status"></p>
+      </article>
+      <article class="admin-card"><h2>Recent Activity</h2><div id="messageHistory" class="message-history"><p class="muted">No messages sent in this browser session.</p></div></article>
+    </section>
+
+    <section class="admin-section" id="settings">
+      <div class="page-heading"><div><span class="eyebrow">CONTROL SETTINGS</span><h1>Settings</h1><p>Basic administrator preferences for this interface.</p></div></div>
+      <article class="admin-card settings-card">
+        <label>Website Name<input id="siteName" value="Know Your Hidden Secrets and Future"></label>
+        <label>Admin Notification Email<input type="email" id="adminEmail" placeholder="admin@example.com"></label>
+        <label class="toggle-row"><input type="checkbox" id="demoMode" checked> <span>Demo mode enabled</span></label>
+        <button class="btn" id="saveSettings">Save Settings</button><p id="settingsStatus" class="message-status"></p>
+      </article>
+    </section>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
