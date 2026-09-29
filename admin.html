@@ -51,6 +51,7 @@
     <button class="admin-nav" data-section="services">☾ Services & AI</button>
     <button class="admin-nav" data-section="appointments">◷ Appointments</button>
     <button class="admin-nav" data-section="messages">✉ Messages</button><button class="admin-nav" data-section="directChats">💬 Direct Chats</button>
+    <button class="admin-nav" data-section="whatsapp">📱 WhatsApp Questions</button>
     <button class="admin-nav" data-section="settings">⚙ Settings</button>
     <a class="admin-home" href="index.html">← Back to Home</a>
   </aside>
@@ -104,6 +105,10 @@
     <section class="admin-section" id="directChats">
   <div class="page-heading"><div><span class="eyebrow">LIVE CUSTOMER COMMUNICATION</span><h1>Direct Chats</h1><p>See public conversations and personally reply to visitors in real time.</p></div></div>
   <article class="admin-card"><div id="publicChatsAdmin"><p class="muted">Loading direct conversations…</p></div></article>
+</section>
+<section class="admin-section" id="whatsapp">
+  <div class="page-heading"><div><span class="eyebrow">WHATSAPP CONSULTATION</span><h1>WhatsApp Questions</h1><p>Read incoming questions and reply directly from your Admin Dashboard.</p></div><div class="live-badge">● Live Inbox</div></div>
+  <article class="admin-card"><div id="whatsappQuestionsAdmin"><p class="muted">Loading WhatsApp questions…</p></div></article>
 </section>
 <section class="admin-section" id="appointments">
       <div class="page-heading"><div><span class="eyebrow">SCHEDULE MANAGEMENT</span><h1>Appointments</h1><p>View and manage real appointment records stored in the database.</p></div></div>
@@ -201,5 +206,45 @@ async function loadPublicChats(){
 window.loadPublicChats=loadPublicChats;
 document.addEventListener("DOMContentLoaded",()=>setTimeout(loadPublicChats,500));
 })();
-</script></body>
+</script><script>
+(function(){
+ const sb=window.supabaseClient;
+ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const fmt=s=>new Date(s).toLocaleString();
+ async function loadWhatsApp(){
+  const root=document.getElementById("whatsappQuestionsAdmin"); if(!root||!sb)return;
+  const {data,error}=await sb.from("whatsapp_consultations").select("id,visitor_name,visitor_phone,initial_question,status,created_at,updated_at").order("updated_at",{ascending:false}).limit(100);
+  if(error){root.innerHTML="<p>"+esc(error.message)+"</p>";return;}
+  if(!data?.length){root.innerHTML="<p class='muted'>No WhatsApp questions have been received yet.</p>";return;}
+  const ids=data.map(x=>x.id);
+  const {data:msgs,error:me}=await sb.from("whatsapp_messages").select("consultation_id,direction,message_text,message_type,created_at").in("consultation_id",ids).order("created_at",{ascending:true});
+  if(me){root.innerHTML="<p>"+esc(me.message)+"</p>";return;}
+  root.innerHTML=data.map(x=>{
+   const transcript=(msgs||[]).filter(m=>m.consultation_id===x.id).map(m=>"<p><strong>"+esc(m.direction==="inbound"?"Visitor":"You")+":</strong> "+esc(m.message_text||"["+m.message_type+"]")+"<br><small>"+esc(fmt(m.created_at))+"</small></p>").join("");
+   return "<div class='request-admin' data-wa='"+x.id+"'><div style='display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap'><strong>"+esc(x.visitor_name||"WhatsApp Visitor")+"</strong><span class='status "+(x.status==="closed"?"active-status":"pending-status")+"'>"+esc(x.status)+"</span></div><div class='request-meta'><span>Mobile: "+esc(x.visitor_phone)+"</span><span>Received: "+esc(fmt(x.created_at))+"</span></div><div class='request-question'><strong>Question:</strong> "+esc(x.initial_question||"")+"</div><div class='request-question' style='max-height:280px;overflow:auto'>"+(transcript||"<span class='muted'>No messages yet.</span>")+"</div><textarea data-wa-reply='"+x.id+"' rows='4' placeholder='Write your answer to this WhatsApp question...'></textarea><button class='btn admin-save' data-wa-send='"+x.id+"'>Send Answer on WhatsApp</button> <button class='btn secondary' data-wa-close='"+x.id+"'>"+(x.status==="closed"?"Reopen":"Mark Closed")+"</button><span data-wa-status='"+x.id+"' class='request-status'></span></div>";
+  }).join("");
+  root.querySelectorAll("[data-wa-send]").forEach(btn=>btn.addEventListener("click",async()=>{
+   const id=btn.dataset.waSend,item=data.find(x=>x.id===id),card=root.querySelector("[data-wa='"+id+"']"),box=card.querySelector("[data-wa-reply='"+id+"']"),st=card.querySelector("[data-wa-status='"+id+"']"),message=box.value.trim();
+   if(!message){st.textContent="Write an answer first.";return;}
+   btn.disabled=true;btn.textContent="Sending…";st.textContent="";
+   try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session)throw new Error("Please log in again.");
+    const res=await fetch((window.supabaseUrl||"").replace(/\/$/,"")+"/functions/v1/whatsapp-send",{method:"POST",headers:{Authorization:"Bearer "+session.access_token,"apikey":window.supabaseAnonKey||"", "Content-Type":"application/json"},body:JSON.stringify({phone:item.visitor_phone,message,consultation_id:id})});
+    const out=await res.json();
+    if(!res.ok||!out.success)throw new Error(out.error||"WhatsApp message could not be sent.");
+    box.value="";st.textContent="Answer sent successfully.";await loadWhatsApp();
+   }catch(e){st.textContent=e.message||"Unable to send."; } finally {btn.disabled=false;btn.textContent="Send Answer on WhatsApp";}
+  }));
+  root.querySelectorAll("[data-wa-close]").forEach(btn=>btn.addEventListener("click",async()=>{
+   const id=btn.dataset.waClose,item=data.find(x=>x.id===id);btn.disabled=true;
+   const {error}=await sb.from("whatsapp_consultations").update({status:item.status==="closed"?"active":"closed",updated_at:new Date().toISOString()}).eq("id",id);
+   if(error)alert(error.message);else loadWhatsApp();btn.disabled=false;
+  }));
+ }
+ window.loadWhatsApp=loadWhatsApp;
+ document.addEventListener("DOMContentLoaded",()=>setTimeout(loadWhatsApp,500));
+})();
+</script>
+</body>
 </html>
