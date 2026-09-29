@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhatsApp Questions | Know Your Hidden Secrets and Future</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+</head>
+<body class="admin-page">
+<header class="topbar admin-topbar"><div><h2>☾ KNOW YOUR HIDDEN SECRETS AND FUTURE</h2><span>WhatsApp Question Inbox</span></div><a class="btn secondary" href="admin.html">← Admin Dashboard</a></header>
+<main class="admin-layout"><section class="admin-main" style="width:100%">
+<section class="admin-section active"><div class="page-heading"><div><span class="eyebrow">WHATSAPP CONSULTATION</span><h1>Incoming Questions</h1><p>Questions received through your WhatsApp consultation number.</p></div></div>
+<article class="admin-card"><div id="whatsappQuestionsAdmin">Checking administrator access…</div></article>
+</section></section></main>
+<script src="whatsapp-admin.js"></script>
+<script>
+(async function(){
+ const sb=window.supabaseClient;
+ if(!sb)return;
+ const {data:{user}}=await sb.auth.getUser();
+ if(!user){location.href="login.html";return;}
+ const {data:p}=await sb.from("profiles").select("role").eq("id",user.id).single();
+ if(!p||p.role!=="admin"){location.href="login.html";return;}
+})();
+</script>
+</body></html>
