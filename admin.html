@@ -115,9 +115,9 @@
       <article class="admin-card"><div class="table-wrap"><table><thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody id="appointmentsBody"><tr><td colspan="5">Loading appointments…</td></tr></tbody></table></div></article>
     </section>
     <section class="admin-section" id="messages">
-      <div class="page-heading"><div><span class="eyebrow">DIRECT COMMUNICATION</span><h1>Messages</h1><p>Send a message to a customer through the selected channel.</p></div></div>
+      <div class="page-heading"><div><span class="eyebrow">DIRECT COMMUNICATION</span><h1>Messages</h1><p>For WhatsApp, enter any WhatsApp number. Customer registration is not required.</p></div></div>
       <article class="admin-card message-card">
-        <label>Customer Email or Mobile<input id="adminRecipient" placeholder="customer@email.com or +91 mobile number"></label>
+        <label>Customer Email or Mobile<input id="adminRecipient" placeholder="Enter WhatsApp number, e.g. +91 9282246743"></label>
         <label>Channel<select id="adminChannel"><option>Email</option><option>SMS</option><option>WhatsApp</option></select></label>
         <label>Message<textarea id="adminMessage" rows="6" placeholder="Write your message..."></textarea></label>
         <button class="btn" id="sendMessage">✉ Send Message</button>
@@ -137,7 +137,7 @@
     </section>
   </section>
 </main>
-<script src="app.js"></script>
+<script src="app.js?v=20260929-whatsapp"></script>
 <script src="admin-nav.js"></script>
 <script>
 (function(){
