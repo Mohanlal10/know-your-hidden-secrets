@@ -177,11 +177,16 @@ insert into public.service_catalog (name,description,ai_instructions) values
 on conflict (name) do nothing;
 alter table public.service_catalog enable row level security;
 alter table public.service_requests enable row level security;
-create policy if not exists "public enabled services read" on public.service_catalog for select to anon, authenticated using (enabled=true or public.is_admin());
-create policy if not exists "admin manage services" on public.service_catalog for all to authenticated using (public.is_admin()) with check (public.is_admin());
-create policy if not exists "customer own service requests" on public.service_requests for select to authenticated using (customer_id=auth.uid() or public.is_admin());
-create policy if not exists "customer create service requests" on public.service_requests for insert to authenticated with check (customer_id=auth.uid());
-create policy if not exists "admin manage service requests" on public.service_requests for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "public enabled services read" on public.service_catalog;
+create policy "public enabled services read" on public.service_catalog for select to anon, authenticated using (enabled=true or public.is_admin());
+drop policy if exists "admin manage services" on public.service_catalog;
+create policy "admin manage services" on public.service_catalog for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "customer own service requests" on public.service_requests;
+create policy "customer own service requests" on public.service_requests for select to authenticated using (customer_id=auth.uid() or public.is_admin());
+drop policy if exists "customer create service requests" on public.service_requests;
+create policy "customer create service requests" on public.service_requests for insert to authenticated with check (customer_id=auth.uid());
+drop policy if exists "admin manage service requests" on public.service_requests;
+create policy "admin manage service requests" on public.service_requests for all to authenticated using (public.is_admin()) with check (public.is_admin());
 grant select on public.service_catalog to anon, authenticated;
 grant select,insert on public.service_requests to authenticated;
 
