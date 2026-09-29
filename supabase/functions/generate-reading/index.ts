@@ -61,7 +61,7 @@ Answer the question directly. If the question requires birth details for a genui
       });
       if (!aiResponse.ok) {
         const detail = await aiResponse.text();
-        throw new Error(\`AI provider error: \${detail.slice(0, 500)}\`);
+        throw new Error("AI provider error: " + detail.slice(0, 500));
       }
       const ai = await aiResponse.json();
       const answer = ai.output_text || ai.output?.flatMap((item: any) => item.content || [])
