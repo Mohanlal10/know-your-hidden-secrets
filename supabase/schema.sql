@@ -221,3 +221,16 @@ execute function public.apply_first_reading_free();
 -- Default pricing requested for all six services
 update public.service_catalog set pricing_mode='paid', price=29, enabled=true, updated_at=now()
 where name in ('Birth Chart Analysis','Love & Marriage','Career Astrology','Life Guidance','Numerology','Vastu Consultation');
+
+
+-- Reading fulfillment mode: administrator can choose manual or AI for each request.
+alter table public.service_requests
+  add column if not exists fulfillment_mode text not null default 'ai'
+  check (fulfillment_mode in ('ai','manual')),
+  add column if not exists customer_answer text,
+  add column if not exists fulfilled_by uuid references public.profiles(id) on delete set null;
+
+create index if not exists service_requests_status_idx on public.service_requests(status);
+create index if not exists service_requests_created_idx on public.service_requests(created_at desc);
+
+grant select, insert, update on public.service_requests to authenticated;
