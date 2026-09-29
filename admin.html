@@ -7,7 +7,35 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <style>
-#serviceCatalogBody textarea,#serviceRequestsAdmin textarea{width:100%;min-width:220px;padding:9px;border:1px solid #ddd3e5;border-radius:9px;font:inherit}#serviceRequestsAdmin .request-admin{border:1px solid #e5dceb;border-radius:14px;padding:18px;margin:12px 0;background:#fff}.request-admin .request-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:#6e6676}.request-admin .request-question{margin:12px 0;padding:12px;background:#faf7fc;border-radius:10px}.request-admin .request-controls{display:grid;grid-template-columns:180px 1fr;gap:12px;align-items:start}.request-admin select{padding:9px;border:1px solid #ddd3e5;border-radius:9px}.request-admin .admin-save{margin-top:10px}.request-admin .mode-help{font-size:12px;color:#756d7c;margin-top:5px}@media(max-width:700px){.request-admin .request-controls{grid-template-columns:1fr}}
+#serviceCatalogBody td{vertical-align:top;white-space:normal}
+.service-name-cell strong{display:block;font-size:15px;margin-bottom:4px;color:#19162a}
+.service-name-cell small{display:block;color:#7b7484;line-height:1.45}
+.service-price{display:flex;flex-direction:column;gap:7px;min-width:150px}
+.service-price-row{display:flex;align-items:center;gap:7px}
+.service-price input{width:92px!important;margin:0!important}
+.service-price select{width:100%;margin:0}
+.service-toggle{display:flex;align-items:center;gap:8px;min-width:90px}
+.service-toggle input{width:18px!important;height:18px;margin:0}
+.service-instructions{min-width:300px}
+.service-instructions textarea{min-height:105px;resize:vertical}
+.service-save{min-width:80px}
+.service-save.saved{background:#23774a;color:#fff}
+.service-save.error{background:#a63d3d;color:#fff}
+.service-helper{font-size:12px;color:#81798b;margin-top:5px}
+.service-section-note{display:flex;gap:10px;align-items:flex-start;background:#f8f5fc;border:1px solid #e8e1f0;border-radius:12px;padding:13px 15px;margin:0 0 18px;color:#61596d;font-size:13px}
+.service-section-note strong{color:#2a2433}
+#serviceRequestsAdmin textarea{width:100%;min-width:220px;padding:11px;border:1px solid #ddd3e5;border-radius:9px;font:inherit;box-sizing:border-box}
+#serviceRequestsAdmin .request-admin{border:1px solid #e5dceb;border-radius:14px;padding:18px;margin:12px 0;background:#fff}
+.request-admin .request-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#6e6676}
+.request-admin .request-meta span{background:#f7f3ff;border-radius:20px;padding:5px 9px}
+.request-admin .request-question{margin:12px 0;padding:13px;background:#faf7fc;border-radius:10px;line-height:1.55}
+.request-admin .request-controls{display:grid;grid-template-columns:210px 1fr;gap:16px;align-items:start}
+.request-admin select{padding:10px;border:1px solid #ddd3e5;border-radius:9px;background:#fff}
+.request-admin .admin-save{margin-top:10px}
+.request-admin .mode-help{font-size:12px;color:#756d7c;margin-top:7px;line-height:1.45}
+.request-status{font-size:13px;margin-left:8px;font-weight:600}
+@media(max-width:900px){.service-instructions{min-width:260px}}
+@media(max-width:700px){.request-admin .request-controls{grid-template-columns:1fr}.service-instructions{min-width:220px}}
 </style></head>
 <body class="admin-page">
 <header class="topbar admin-topbar">
@@ -62,10 +90,10 @@
 
 
 <section class="admin-section" id="services">
-      <div class="page-heading"><div><span class="eyebrow">READING CONTROL</span><h1>Services & AI</h1><p>Choose how each customer request is fulfilled and define the AI instructions used for automated readings.</p></div></div>
+      <div class="page-heading"><div><span class="eyebrow">READING CONTROL</span><h1>Services & AI</h1><p>Control pricing, availability and the instructions used by automated readings.</p></div><div class="live-badge">● Live Configuration</div></div>
       <article class="admin-card">
-        <h2>Service Configuration</h2>
-        <div class="table-wrap"><table><thead><tr><th>Service</th><th>Price</th><th>Enabled</th><th>AI Instructions</th><th>Save</th></tr></thead><tbody id="serviceCatalogBody"><tr><td colspan="5">Loading services…</td></tr></tbody></table></div>
+        <div class="service-section-note"><span>✦</span><div><strong>How this works:</strong> The first reading for each customer is automatically free. Later readings use the price below. AI instructions guide the automated reading without exposing your private API key.</div></div>
+        <div class="table-wrap"><table><thead><tr><th>Service</th><th>Pricing</th><th>Availability</th><th>AI Instructions</th><th>Action</th></tr></thead><tbody id="serviceCatalogBody"><tr><td colspan="5">Loading services…</td></tr></tbody></table></div>
       </article>
       <article class="admin-card" style="margin-top:18px">
         <h2>Incoming Reading Requests</h2>
@@ -111,13 +139,13 @@
     const {data,error}=await sb.from("service_catalog").select("id,name,description,enabled,pricing_mode,price,ai_instructions").order("name");
     const body=document.getElementById("serviceCatalogBody");
     if(error){body.innerHTML='<tr><td colspan="5">'+esc(error.message)+'</td></tr>';return;}
-    body.innerHTML=(data||[]).map(s=>'<tr><td><strong>'+esc(s.name)+'</strong><br><small>'+esc(s.description)+'</small></td><td><input data-price="'+s.id+'" type="number" min="0" step="0.01" value="'+esc(s.price)+'" style="width:95px"><select data-mode="'+s.id+'"><option value="free" '+(s.pricing_mode==="free"?"selected":"")+'>Free</option><option value="paid" '+(s.pricing_mode==="paid"?"selected":"")+'>Paid</option></select></td><td><input data-enabled="'+s.id+'" type="checkbox" '+(s.enabled?"checked":"")+'></td><td><textarea data-instructions="'+s.id+'" rows="4">'+esc(s.ai_instructions||"")+'</textarea></td><td><button class="btn" data-save-service="'+s.id+'">Save</button></td></tr>').join("");
+    body.innerHTML=(data||[]).map(s=>'<tr><td class="service-name-cell"><strong>'+esc(s.name)+'</strong><small>'+esc(s.description)+'</small></td><td><div class="service-price"><div class="service-price-row"><span>₹</span><input data-price="'+s.id+'" type="number" min="0" step="1" value="'+esc(s.price)+'"></div><select data-mode="'+s.id+'"><option value="free" '+(s.pricing_mode==="free"?"selected":"")+' >Free</option><option value="paid" '+(s.pricing_mode==="paid"?"selected":"")+'>Paid</option></select><div class="service-helper">After first free reading</div></div></td><td><label class="service-toggle"><input data-enabled="'+s.id+'" type="checkbox" '+(s.enabled?"checked":"")+'><span>'+ (s.enabled?"Enabled":"Disabled") +'</span></label></td><td class="service-instructions"><textarea data-instructions="'+s.id+'" rows="4" placeholder="Describe how the AI should interpret this service...">'+esc(s.ai_instructions||"")+'</textarea></td><td><button class="btn service-save" data-save-service="'+s.id+'">Save</button></td></tr>').join("");
     body.querySelectorAll("[data-save-service]").forEach(btn=>btn.addEventListener("click",async()=>{
       const id=btn.dataset.saveService;
       btn.disabled=true;btn.textContent="Saving…";
       const payload={price:Number(body.querySelector('[data-price="'+id+'"]').value||0),pricing_mode:body.querySelector('[data-mode="'+id+'"]').value,enabled:body.querySelector('[data-enabled="'+id+'"]').checked,ai_instructions:body.querySelector('[data-instructions="'+id+'"]').value,updated_at:new Date().toISOString()};
       const {error}=await sb.from("service_catalog").update(payload).eq("id",id);
-      btn.disabled=false;btn.textContent=error?"Retry":"Saved";
+      btn.disabled=false;btn.textContent=error?"Retry":"Saved";btn.classList.toggle("saved",!error);btn.classList.toggle("error",!!error);setTimeout(()=>{btn.textContent="Save";btn.classList.remove("saved","error");},1800);
     }));
   }
   async function loadRequestControl(){
@@ -126,7 +154,7 @@
     const root=document.getElementById("serviceRequestsAdmin");
     if(error){root.innerHTML='<p>'+esc(error.message)+'</p>';return;}
     if(!data?.length){root.innerHTML='<p class="muted">No customer requests yet.</p>';return;}
-    root.innerHTML=data.map(r=>'<div class="request-admin" data-request="'+r.id+'"><div><strong>'+esc(r.service_name)+'</strong></div><div class="request-meta"><span>'+esc(r.birth_date||"")+' '+esc(r.birth_time||"")+'</span><span>Place: '+esc(r.birth_place||"")+'</span><span>Price: ₹'+esc(r.price)+'</span><span>Status: '+esc(r.status)+'</span><span>Payment: '+esc(r.payment_status)+'</span></div><div class="request-question"><strong>Question:</strong> '+esc(r.question)+'</div><div class="request-controls"><div><label>Fulfillment</label><select data-mode="'+r.id+'"><option value="ai" '+(r.fulfillment_mode==="ai"?"selected":"")+'>AI</option><option value="manual" '+(r.fulfillment_mode==="manual"?"selected":"")+'>Manual</option></select><div class="mode-help">AI uses the saved service instructions. Manual lets you write the customer response.</div></div><div><label>Manual Personal Response</label><textarea data-answer="'+r.id+'" rows="8" placeholder="Write the personal reading here. It will be delivered as the customer’s reading.">'+esc(r.admin_answer||r.customer_answer||"")+'</textarea><div><button class="btn admin-save" data-save-request="'+r.id+'">Save & Deliver</button> <span data-status="'+r.id+'"></span></div></div></div></div>').join("");
+    root.innerHTML=data.map(r=>'<div class="request-admin" data-request="'+r.id+'"><div><strong>'+esc(r.service_name)+'</strong></div><div class="request-meta"><span>'+esc(r.birth_date||"")+' '+esc(r.birth_time||"")+'</span><span>Place: '+esc(r.birth_place||"")+'</span><span>Price: ₹'+esc(r.price)+'</span><span>Status: '+esc(r.status)+'</span><span>Payment: '+esc(r.payment_status)+'</span></div><div class="request-question"><strong>Question:</strong> '+esc(r.question)+'</div><div class="request-controls"><div><label>Fulfillment</label><select data-mode="'+r.id+'"><option value="ai" '+(r.fulfillment_mode==="ai"?"selected":"")+'>AI</option><option value="manual" '+(r.fulfillment_mode==="manual"?"selected":"")+'>Manual</option></select><div class="mode-help">AI uses the saved service instructions when the customer requests an automated reading. Manual lets you write the final response.</div></div><div><label>Manual Personal Response</label><textarea data-answer="'+r.id+'" rows="8" placeholder="Write the personal reading here. It will be delivered as the customer’s reading.">'+esc(r.admin_answer||r.customer_answer||"")+'</textarea><div><button class="btn admin-save" data-save-request="'+r.id+'">Save & Deliver</button> <span data-status="'+r.id+'"></span></div></div></div></div>').join("");
     root.querySelectorAll("[data-save-request]").forEach(btn=>btn.addEventListener("click",async()=>{
       const id=btn.dataset.saveRequest, card=root.querySelector('[data-request="'+id+'"]'), mode=card.querySelector('[data-mode="'+id+'"]').value, answer=card.querySelector('[data-answer="'+id+'"]').value.trim();
       if(mode==="manual"&&!answer){alert("Please enter the personal response before choosing Manual.");return;}
