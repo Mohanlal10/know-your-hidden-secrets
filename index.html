@@ -27,4 +27,100 @@
 <section class="ai"><div class="ai-box"><div class="symbol">☾ ✦ ☼</div><h2>Your AI Astrology Guide</h2><p>Sign in to enter your personal space and receive an instant welcome from our AI guide.</p><div class="ai-message">“Welcome to our channel, know your hidden secrets and about future with clarity.”</div><a class="btn" href="login.html">♙ Login & Meet Your Guide</a></div></section>
 <section class="section"><div class="wrap"><div class="section-title"><div class="icon">☾</div><h2>Begin With a Question</h2><p>Sometimes clarity begins with simply asking what has been on our mind.</p><a class="btn" href="login.html">Ask Your Question ✦</a></div></div></section>
 <footer class="footer">✦ <b>Know Your Hidden Secrets and Future</b> ✦<br><small>Astrology • Guidance • Self-Discovery</small></footer>
-<div class="modal" id="serviceModal" aria-hidden="true"><div class="modal-box"><button class="modal-close" id="closeService" aria-label="Close">×</button><h2 id="serviceTitle">Your Reading</h2><p class="modal-sub" id="serviceDescription"></p><div class="offer">✦ First result FREE • After your first result, readings are ₹29 each.</div><form id="serviceForm"><div class="form-grid"><div class="field"><label>Full Name <span class="required">*</span></label><input id="rName" required></div><div class="field"><label>Email <span class="required">*</span></label><input id="rEmail" type="email" required></div><div class="field"><label>Date of Birth <span class="required">*</span></label><input id="rDob" type="date" required></div><div class="field"><label>Time of Birth <span class="required">*</span></label><input id="rTime" type="time" required></div><div class="field full"><label>Place of Birth <span class="required">*</span></label><input id="rPlace" placeholder="City, State, Country" required></div><div class="field full"><label>Your Question / What would you like to know? <span class="required">*</span></label><textarea id="rQuestion" required placeholder="Write your question clearly..."></textarea></div></div><button class="btn" type="submit" style="border:0;cursor:pointer;margin-top:18px">✦ Get My Result</button></form><div class="result-box" id="resultBox"><h3>Your Personalized Reading</h3><div id="resultText"></div><div class="result-note">This is an astrology/numerology/Vastu-based reflective interpretation, not a guaranteed prediction. Your submitted request can also be saved to your customer account when you are signed in.</div></div></div></div><script>(function(){const modal=document.getElementById("serviceModal"),title=document.getElementById("serviceTitle"),desc=document.getElementById("serviceDescription"),form=document.getElementById("serviceForm"),box=document.getElementById("resultBox"),out=document.getElementById("resultText"),close=()=>{modal.classList.remove("show");modal.setAttribute("aria-hidden","true")};let selected="";const descriptions={${cards.map(x=>`"${x[0]}":"${x[1]}"`).join(</html>
+<div class="modal" id="serviceModal" aria-hidden="true"><div class="modal-box"><button class="modal-close" id="closeService" aria-label="Close">×</button><h2 id="serviceTitle">Your Reading</h2><p class="modal-sub" id="serviceDescription"></p><div class="offer">✦ First result FREE • After your first result, readings are ₹29 each.</div><form id="serviceForm"><div class="form-grid"><div class="field"><label>Full Name <span class="required">*</span></label><input id="rName" required></div><div class="field"><label>Email <span class="required">*</span></label><input id="rEmail" type="email" required></div><div class="field"><label>Date of Birth <span class="required">*</span></label><input id="rDob" type="date" required></div><div class="field"><label>Time of Birth <span class="required">*</span></label><input id="rTime" type="time" required></div><div class="field full"><label>Place of Birth <span class="required">*</span></label><input id="rPlace" placeholder="City, State, Country" required></div><div class="field full"><label>Your Question / What would you like to know? <span class="required">*</span></label><textarea id="rQuestion" required placeholder="Write your question clearly..."></textarea></div></div><button class="btn" type="submit" style="border:0;cursor:pointer;margin-top:18px">✦ Get My Result</button></form><div class="result-box" id="resultBox"><h3>Your Personalized Reading</h3><div id="resultText"></div><div class="result-note">This is an astrology/numerology/Vastu-based reflective interpretation, not a guaranteed prediction. Your submitted request can also be saved to your customer account when you are signed in.</div></div></div></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+(function(){
+  const modal=document.getElementById("serviceModal");
+  const title=document.getElementById("serviceTitle");
+  const desc=document.getElementById("serviceDescription");
+  const form=document.getElementById("serviceForm");
+  const box=document.getElementById("resultBox");
+  const out=document.getElementById("resultText");
+  const closeBtn=document.getElementById("closeService");
+  const submitBtn=form.querySelector('button[type="submit"]');
+  let selected="";
+  const descriptions={
+    "Birth Chart Analysis":"Explore planetary influences and important life themes.",
+    "Love & Marriage":"Reflect on relationships, compatibility and emotional patterns.",
+    "Career Astrology":"Gain perspective on work, direction and opportunities.",
+    "Life Guidance":"Discover reflective insights for important decisions.",
+    "Numerology":"Explore the symbolic meaning of numbers in your life.",
+    "Vastu Consultation":"Guidance on spaces, balance and traditional Vastu principles."
+  };
+  const escapeHtml=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  function openService(name){
+    selected=name;
+    title.textContent=name;
+    desc.textContent=descriptions[name]||"Personalized guidance for your question.";
+    form.reset();
+    box.classList.remove("show");
+    out.innerHTML="";
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+    document.getElementById("rName").focus();
+  }
+  function close(){modal.classList.remove("show");modal.setAttribute("aria-hidden","true");}
+  document.querySelectorAll(".service-card").forEach(card=>{
+    card.addEventListener("click",()=>openService(card.dataset.service));
+    card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openService(card.dataset.service);}});
+  });
+  closeBtn.addEventListener("click",close);
+  modal.addEventListener("click",e=>{if(e.target===modal)close();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});
+  form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const name=document.getElementById("rName").value.trim();
+    const email=document.getElementById("rEmail").value.trim();
+    const birth_date=document.getElementById("rDob").value;
+    const birth_time=document.getElementById("rTime").value;
+    const birth_place=document.getElementById("rPlace").value.trim();
+    const question=document.getElementById("rQuestion").value.trim();
+    if(!name||!email||!birth_date||!birth_time||!birth_place||!question){form.reportValidity();return;}
+    submitBtn.disabled=true;
+    submitBtn.textContent="Submitting…";
+    try{
+      const sb=window.supabaseClient;
+      if(!sb){
+        throw new Error("The secure service connection is not configured yet. Please sign in after the administrator connects Supabase.");
+      }
+      const {data:{session}}=await sb.auth.getSession();
+      if(!session){
+        box.classList.add("show");
+        out.innerHTML='<p><strong>Your details are ready.</strong> Please <a href="login.html" style="color:#8b5db5;font-weight:800">log in or create your customer account</a> to submit this reading. Your first reading is free.</p>';
+        return;
+      }
+      const {data:svc,error:svcError}=await sb.from("service_catalog").select("id,name,description,pricing_mode,price,enabled").eq("name",selected).eq("enabled",true).single();
+      if(svcError||!svc) throw new Error("This service is currently unavailable.");
+      const {data:req,error:reqError}=await sb.from("service_requests").insert({
+        customer_id:session.user.id,
+        service_id:svc.id,
+        service_name:svc.name,
+        question,
+        birth_date,
+        birth_time,
+        birth_place,
+        pricing_mode:svc.pricing_mode,
+        price:svc.price,
+        payment_status:svc.pricing_mode==="free"?"not_required":"pending",
+        status:svc.pricing_mode==="free"?"queued":"awaiting_payment"
+      }).select("id,first_reading_free,pricing_mode,price,status").single();
+      if(reqError) throw reqError;
+      box.classList.add("show");
+      if(req.first_reading_free||req.price===0){
+        out.innerHTML='<p><strong>Reading request received.</strong></p><p>Your first reading is free and has been placed in the queue. The personalized AI reading will appear in your customer account once processing is completed.</p><p><strong>Request ID:</strong> '+escapeHtml(req.id)+'</p>';
+      }else{
+        out.innerHTML='<p><strong>Request created.</strong></p><p>This reading is ₹'+escapeHtml(req.price)+' and is awaiting payment before AI processing.</p><p><strong>Request ID:</strong> '+escapeHtml(req.id)+'</p>';
+      }
+    }catch(err){
+      box.classList.add("show");
+      out.innerHTML='<p><strong>We could not submit your request.</strong></p><p>'+escapeHtml(err.message||"Please try again.")+'</p>';
+    }finally{
+      submitBtn.disabled=false;
+      submitBtn.textContent="✦ Get My Result";
+    }
+  });
+})();
+</script>
+</body>
+</html>
