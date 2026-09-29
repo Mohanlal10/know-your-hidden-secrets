@@ -61,7 +61,7 @@ Answer the question directly. If the question requires birth details for a genui
       });
       if (!aiResponse.ok) {
         const detail = await aiResponse.text();
-        throw new Error("AI provider error: " + detail.slice(0, 500));
+        console.error("AI provider authentication/request error:", detail); throw new Error("The AI service could not authenticate. Please check the OpenAI API key configured in Supabase.");
       }
       const ai = await aiResponse.json();
       const answer = ai.output_text || ai.output?.flatMap((item: any) => item.content || [])
