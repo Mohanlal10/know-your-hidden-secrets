@@ -50,7 +50,7 @@ Answer the question directly. If the question requires birth details for a genui
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": \`Bearer \${openaiKey}\`,
+          "Authorization": `Bearer ${openaiKey}`,
         },
         body: JSON.stringify({
           model: "gpt-5.6-luna",
@@ -67,7 +67,7 @@ Answer the question directly. If the question requires birth details for a genui
       const answer = ai.output_text || ai.output?.flatMap((item: any) => item.content || [])
         .filter((part: any) => part.type === "output_text")
         .map((part: any) => part.text)
-        .join("\\n") || "";
+        .join("\n") || "";
       if (!answer) throw new Error("The AI service returned an empty answer.");
       return new Response(JSON.stringify({ success: true, answer }), {
         status: 200,
