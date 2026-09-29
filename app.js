@@ -1,7 +1,7 @@
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");document.querySelectorAll("form").forEach(f=>f.classList.add("hidden"));document.getElementById(t.dataset.target)?.classList.remove("hidden");}));
 
 const sb=window.supabaseClient||null;
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#39;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 
 document.getElementById("customer")?.addEventListener("submit",async e=>{e.preventDefault();const s=document.getElementById("customerStatus");if(!sb){s.textContent="Connect the Supabase project first.";return;}const {error}=await sb.auth.signInWithPassword({email:customerEmail.value.trim(),password:customerPassword.value});if(error){s.textContent=error.message;return;}location.href="dashboard.html";});
 document.getElementById("customerSignup")?.addEventListener("click",async e=>{e.preventDefault();const s=document.getElementById("customerStatus"),email=customerEmail.value.trim(),password=customerPassword.value;if(!sb){s.textContent="Connect the Supabase project first.";return;}if(!email||!password){s.textContent="Enter email and password first.";return;}const {error}=await sb.auth.signUp({email,password,options:{data:{full_name:email.split("@")[0]}}});s.textContent=error?error.message:"Account created. Check your email if confirmation is enabled, then log in.";});
