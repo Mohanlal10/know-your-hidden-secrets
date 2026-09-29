@@ -102,5 +102,47 @@
 </main>
 <script src="app.js"></script>
 <script src="admin-nav.js"></script>
+<script>
+(function(){
+  const sb=window.supabaseClient;
+  const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  async function loadServiceControl(){
+    if(!sb)return;
+    const {data,error}=await sb.from("service_catalog").select("id,name,description,enabled,pricing_mode,price,ai_instructions").order("name");
+    const body=document.getElementById("serviceCatalogBody");
+    if(error){body.innerHTML='<tr><td colspan="5">'+esc(error.message)+'</td></tr>';return;}
+    body.innerHTML=(data||[]).map(s=>'<tr><td><strong>'+esc(s.name)+'</strong><br><small>'+esc(s.description)+'</small></td><td><input data-price="'+s.id+'" type="number" min="0" step="0.01" value="'+esc(s.price)+'" style="width:95px"><select data-mode="'+s.id+'"><option value="free" '+(s.pricing_mode==="free"?"selected":"")+'>Free</option><option value="paid" '+(s.pricing_mode==="paid"?"selected":"")+'>Paid</option></select></td><td><input data-enabled="'+s.id+'" type="checkbox" '+(s.enabled?"checked":"")+'></td><td><textarea data-instructions="'+s.id+'" rows="4">'+esc(s.ai_instructions||"")+'</textarea></td><td><button class="btn" data-save-service="'+s.id+'">Save</button></td></tr>').join("");
+    body.querySelectorAll("[data-save-service]").forEach(btn=>btn.addEventListener("click",async()=>{
+      const id=btn.dataset.saveService;
+      btn.disabled=true;btn.textContent="Saving…";
+      const payload={price:Number(body.querySelector('[data-price="'+id+'"]').value||0),pricing_mode:body.querySelector('[data-mode="'+id+'"]').value,enabled:body.querySelector('[data-enabled="'+id+'"]').checked,ai_instructions:body.querySelector('[data-instructions="'+id+'"]').value,updated_at:new Date().toISOString()};
+      const {error}=await sb.from("service_catalog").update(payload).eq("id",id);
+      btn.disabled=false;btn.textContent=error?"Retry":"Saved";
+    }));
+  }
+  async function loadRequestControl(){
+    if(!sb)return;
+    const {data,error}=await sb.from("service_requests").select("id,service_name,question,birth_date,birth_time,birth_place,pricing_mode,price,payment_status,status,fulfillment_mode,ai_answer,admin_answer,customer_answer,created_at,customer_id").order("created_at",{ascending:false}).limit(50);
+    const root=document.getElementById("serviceRequestsAdmin");
+    if(error){root.innerHTML='<p>'+esc(error.message)+'</p>';return;}
+    if(!data?.length){root.innerHTML='<p class="muted">No customer requests yet.</p>';return;}
+    root.innerHTML=data.map(r=>'<div class="request-admin" data-request="'+r.id+'"><div><strong>'+esc(r.service_name)+'</strong></div><div class="request-meta"><span>'+esc(r.birth_date||"")+' '+esc(r.birth_time||"")+'</span><span>Place: '+esc(r.birth_place||"")+'</span><span>Price: ₹'+esc(r.price)+'</span><span>Status: '+esc(r.status)+'</span><span>Payment: '+esc(r.payment_status)+'</span></div><div class="request-question"><strong>Question:</strong> '+esc(r.question)+'</div><div class="request-controls"><div><label>Fulfillment</label><select data-mode="'+r.id+'"><option value="ai" '+(r.fulfillment_mode==="ai"?"selected":"")+'>AI</option><option value="manual" '+(r.fulfillment_mode==="manual"?"selected":"")+'>Manual</option></select><div class="mode-help">AI uses the saved service instructions. Manual lets you write the customer response.</div></div><div><label>Manual Personal Response</label><textarea data-answer="'+r.id+'" rows="8" placeholder="Write the personal reading here. It will be delivered as the customer’s reading.">'+esc(r.admin_answer||r.customer_answer||"")+'</textarea><div><button class="btn admin-save" data-save-request="'+r.id+'">Save & Deliver</button> <span data-status="'+r.id+'"></span></div></div></div></div>').join("");
+    root.querySelectorAll("[data-save-request]").forEach(btn=>btn.addEventListener("click",async()=>{
+      const id=btn.dataset.saveRequest, card=root.querySelector('[data-request="'+id+'"]'), mode=card.querySelector('[data-mode="'+id+'"]').value, answer=card.querySelector('[data-answer="'+id+'"]').value.trim();
+      if(mode==="manual"&&!answer){alert("Please enter the personal response before choosing Manual.");return;}
+      btn.disabled=true;btn.textContent="Saving…";
+      const update={fulfillment_mode:mode,updated_at:new Date().toISOString()};
+      if(mode==="manual"){update.admin_answer=answer;update.customer_answer=answer;update.status="completed";}
+      const {error}=await sb.from("service_requests").update(update).eq("id",id);
+      const st=card.querySelector('[data-status="'+id+'"]');
+      st.textContent=error?error.message:"Saved and delivered.";
+      btn.disabled=false;btn.textContent="Save & Deliver";
+    }));
+  }
+  window.loadReadingControls=function(){loadServiceControl();loadRequestControl();};
+  document.addEventListener("DOMContentLoaded",function(){setTimeout(window.loadReadingControls,400);});
+})();
+</script>
+
 </body>
 </html>
