@@ -1,1 +1,82 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login | Know Your Hidden Secrets and Future</title><link rel="stylesheet" href="styles.css"></head><body class="auth"><div class="auth-box"><h2>✦ KNOW YOUR HIDDEN SECRETS AND FUTURE</h2><div class="tabs"><button class="tab active" data-target="customer">Customer Login</button><button class="tab" data-target="admin">Admin Login</button></div><form id="customer"><h1>Welcome back</h1><label>Email<input id="customerEmail" required type="email" autocomplete="username"></label><label>Password<input id="customerPassword" required type="password" autocomplete="current-password"></label><button class="btn full">Login as Customer</button><p id="customerStatus" class="message-status" aria-live="polite"></p><p class="auth-note">New customer? <a href="signup.html" id="customerSignup">Create an account</a></p><p class="auth-note">Use an email address you can access. If email confirmation is enabled, confirm the email before logging in.</p></form><form id="admin" class="hidden"><h1>Secure administrator portal</h1><label>Administrator email<input id="adminEmailLogin" required type="email" autocomplete="username"></label><label>Password<input id="adminPassword" required type="password" autocomplete="current-password"></label><button class="btn full">Open Admin Dashboard</button><p id="adminStatus" class="message-status"></p><p class="auth-note">Administrator access is controlled by the database role.</p></form></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login | Know Your Hidden Secrets and Future</title><link rel="stylesheet" href="styles.css"></head><body class="auth"><div class="auth-box"><h2>✦ KNOW YOUR HIDDEN SECRETS AND FUTURE</h2><div class="tabs"><button class="tab active" data-target="customer">Customer Login</button><button class="tab" data-target="admin">Admin Login</button></div><form id="customer"><h1>Welcome back</h1><label>Email<input id="customerEmail" required type="email" autocomplete="username"></label><label>Password<input id="customerPassword" required type="password" autocomplete="current-password"></label><button class="btn full">Login as Customer</button><p id="customerStatus" class="message-status" aria-live="polite"></p><p class="auth-note">New customer? <a href="signup.html" id="customerSignup">Create an account</a></p><p class="auth-note">Use an email address you can access. If email confirmation is enabled, confirm the email before logging in.</p></form><form id="admin" class="hidden"><h1>Secure administrator portal</h1><label>Administrator email<input id="adminEmailLogin" required type="email" autocomplete="username"></label><label>Password<input id="adminPassword" required type="password" autocomplete="current-password"></label><button class="btn full">Open Admin Dashboard</button><p id="adminStatus" class="message-status"></p><p class="auth-note">Administrator access is controlled by the database role.</p></form></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script>
+(() => {
+  const statusCustomer = document.getElementById("customerStatus");
+  const statusAdmin = document.getElementById("adminStatus");
+  const supabaseLib = window.supabase;
+  const sb = window.supabaseClient || (supabaseLib && window.SUPABASE_URL && window.SUPABASE_PUBLISHABLE_KEY
+    ? supabaseLib.createClient(window.SUPABASE_URL, window.SUPABASE_PUBLISHABLE_KEY)
+    : null);
+
+  const setStatus = (el, msg, ok = false) => {
+    if (el) {
+      el.textContent = msg;
+      el.style.color = ok ? "#16794c" : "";
+    }
+  };
+
+  document.getElementById("customer")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("customerEmail").value.trim();
+    const password = document.getElementById("customerPassword").value;
+    if (!sb) { setStatus(statusCustomer, "Login service is not connected. Please refresh the page."); return; }
+    if (!email || !password) { setStatus(statusCustomer, "Please enter your email and password."); return; }
+
+    setStatus(statusCustomer, "Signing in…");
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      console.error("Customer login error:", error);
+      setStatus(statusCustomer, error.message || "Login failed. Please check your email and password.");
+      return;
+    }
+
+    if (!data?.session || !data?.user) {
+      setStatus(statusCustomer, "Login did not create a session. Please try again.");
+      return;
+    }
+
+    setStatus(statusCustomer, "Login successful. Opening your dashboard…", true);
+    window.location.assign("dashboard.html");
+  });
+
+  document.getElementById("admin")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("adminEmailLogin").value.trim();
+    const password = document.getElementById("adminPassword").value;
+    if (!sb) { setStatus(statusAdmin, "Login service is not connected. Please refresh the page."); return; }
+
+    setStatus(statusAdmin, "Signing in…");
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      console.error("Admin login error:", error);
+      setStatus(statusAdmin, error.message || "Login failed. Please check your credentials.");
+      return;
+    }
+
+    const user = data?.user;
+    if (!user) { setStatus(statusAdmin, "Login did not return a user. Please try again."); return; }
+
+    const { data: profile, error: profileError } = await sb
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || profile?.role !== "admin") {
+      await sb.auth.signOut();
+      setStatus(statusAdmin, "This account is not authorized as an administrator.");
+      return;
+    }
+
+    setStatus(statusAdmin, "Login successful. Opening administrator dashboard…", true);
+    window.location.assign("admin.html");
+  });
+
+  document.getElementById("customerSignup")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.assign("signup.html");
+  });
+})();
+</script>
+<script src="app.js"></script></body></html>
