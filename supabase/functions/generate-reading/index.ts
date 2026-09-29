@@ -53,7 +53,7 @@ Answer the question directly. If the question requires birth details for a genui
           "Authorization": `Bearer ${openaiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-6-luna",
+          model: "gpt-5.6-luna",
           instructions: systemPrompt,
           input: userPrompt,
           max_output_tokens: 1200,
@@ -127,7 +127,7 @@ Write the reading with a short opening, 3-5 focused insight sections, practical 
         "Authorization": `Bearer ${openaiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-6-luna",
+        model: "gpt-5.6-luna",
         instructions: systemPrompt,
         input: userPrompt,
         max_output_tokens: 1800,
