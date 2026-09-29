@@ -16,6 +16,7 @@
     <button class="admin-nav active" data-section="overview">⌂ Overview</button>
     <button class="admin-nav" data-section="customers">♙ Customers</button>
     <button class="admin-nav" data-section="readings">✧ Readings</button>
+    <button class="admin-nav" data-section="appointments">◷ Appointments</button>
     <button class="admin-nav" data-section="messages">✉ Messages</button>
     <button class="admin-nav" data-section="settings">⚙ Settings</button>
     <a class="admin-home" href="index.html">← Back to Home</a>
@@ -54,6 +55,11 @@
       </div>
     </section>
 
+
+    <section class="admin-section" id="appointments">
+      <div class="page-heading"><div><span class="eyebrow">SCHEDULE MANAGEMENT</span><h1>Appointments</h1><p>View and manage real appointment records stored in the database.</p></div></div>
+      <article class="admin-card"><div class="table-wrap"><table><thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody id="appointmentsBody"><tr><td colspan="5">Loading appointments…</td></tr></tbody></table></div></article>
+    </section>
     <section class="admin-section" id="messages">
       <div class="page-heading"><div><span class="eyebrow">DIRECT COMMUNICATION</span><h1>Messages</h1><p>Send a message to a customer through the selected channel.</p></div></div>
       <article class="admin-card message-card">
