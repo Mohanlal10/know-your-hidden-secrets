@@ -184,3 +184,8 @@ create policy if not exists "customer create service requests" on public.service
 create policy if not exists "admin manage service requests" on public.service_requests for all to authenticated using (public.is_admin()) with check (public.is_admin());
 grant select on public.service_catalog to anon, authenticated;
 grant select,insert on public.service_requests to authenticated;
+
+
+-- Default pricing requested for all six services
+update public.service_catalog set pricing_mode='paid', price=29, enabled=true, updated_at=now()
+where name in ('Birth Chart Analysis','Love & Marriage','Career Astrology','Life Guidance','Numerology','Vastu Consultation');
