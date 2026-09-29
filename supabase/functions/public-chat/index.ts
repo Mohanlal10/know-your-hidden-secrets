@@ -18,7 +18,15 @@ async function verifyToken(token,secret){
   if((await sign(parts[0],secret))!==parts[1])return null;
   try{const p=JSON.parse(unb64urlText(parts[0]));return Number.isFinite(p.exp)&&Date.now()<p.exp?p:null;}catch{return null;}
 }
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#39;"}[c]));}
+function esc(v){
+  return String(v ?? "").replace(/[&<>"']/g, function(ch){
+    if(ch==="&") return "&amp;";
+    if(ch==="<") return "&lt;";
+    if(ch===">") return "&gt;";
+    if(ch==='"') return "&quot;";
+    return "&#39;";
+  });
+}
 
 async function notifyAdmin(name,phone,email,message,conversationId){
   const text="🔔 NEW DIRECT MESSAGE\n\nName: "+name+"\nMobile: "+phone+"\nEmail: "+email+"\n\nMessage:\n"+message+"\n\nConversation ID:\n"+conversationId;
