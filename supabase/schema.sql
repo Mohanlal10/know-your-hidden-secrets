@@ -186,6 +186,38 @@ grant select on public.service_catalog to anon, authenticated;
 grant select,insert on public.service_requests to authenticated;
 
 
+-- First-result offer: every customer gets their first reading free.
+-- The offer applies once per customer across all six services.
+alter table public.service_requests
+  add column if not exists first_reading_free boolean not null default false;
+
+create or replace function public.apply_first_reading_free()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $
+begin
+  if not exists (
+    select 1
+    from public.service_requests sr
+    where sr.customer_id = new.customer_id
+  ) then
+    new.first_reading_free := true;
+    new.pricing_mode := 'free';
+    new.price := 0;
+    new.payment_status := 'not_required';
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists trg_apply_first_reading_free on public.service_requests;
+create trigger trg_apply_first_reading_free
+before insert on public.service_requests
+for each row
+execute function public.apply_first_reading_free();
+
 -- Default pricing requested for all six services
 update public.service_catalog set pricing_mode='paid', price=29, enabled=true, updated_at=now()
 where name in ('Birth Chart Analysis','Love & Marriage','Career Astrology','Life Guidance','Numerology','Vastu Consultation');
