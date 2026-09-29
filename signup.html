@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create Account | Know Your Hidden Secrets and Future</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth">
+<div class="auth-box">
+<h2>✦ KNOW YOUR HIDDEN SECRETS AND FUTURE</h2>
+<h1>Create your customer account</h1>
+<p class="auth-note">Create an account to request your personalized readings and view them securely in your dashboard.</p>
+<form id="signupForm">
+<label>Full Name<input id="signupName" required type="text" autocomplete="name"></label>
+<label>Email<input id="signupEmail" required type="email" autocomplete="email"></label>
+<label>Password<input id="signupPassword" required type="password" minlength="6" autocomplete="new-password"></label>
+<button class="btn full" type="submit">Create Account</button>
+<p id="signupStatus" class="message-status" aria-live="polite"></p>
+</form>
+<p class="auth-note"><a href="login.html">Already have an account? Login</a></p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+const sb=window.supabaseClient||null;
+const form=document.getElementById("signupForm");
+const status=document.getElementById("signupStatus");
+form.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const name=document.getElementById("signupName").value.trim();
+ const email=document.getElementById("signupEmail").value.trim();
+ const password=document.getElementById("signupPassword").value;
+ if(!sb){status.textContent="Secure account service is not connected. Please refresh and try again.";return;}
+ if(password.length<6){status.textContent="Password must be at least 6 characters.";return;}
+ status.textContent="Creating your account…";
+ const redirect=window.location.origin+"/know-your-hidden-secrets/dashboard.html";
+ const {data,error}=await sb.auth.signUp({
+   email,
+   password,
+   options:{data:{full_name:name},emailRedirectTo:redirect}
+ });
+ if(error){
+   status.textContent="Signup error: "+error.message;
+   return;
+ }
+ if(!data?.user){
+   status.textContent="No user was returned. Please try again.";
+   return;
+ }
+ if(data.session){
+   status.textContent="Account created. Opening your dashboard…";
+   window.location.replace("dashboard.html");
+   return;
+ }
+ status.textContent="Account created. Please check your email to complete verification before logging in.";
+});
+</script>
+</body>
+</html>
