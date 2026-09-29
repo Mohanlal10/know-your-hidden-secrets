@@ -135,3 +135,52 @@ grant select, insert, update, delete on public.readings to authenticated;
 grant select, insert, update, delete on public.messages to authenticated;
 
 -- IMPORTANT: never expose a Supabase secret/service_role key in browser code.
+
+
+-- Service catalog and customer reading requests
+create table if not exists public.service_catalog (
+  id uuid primary key default gen_random_uuid(),
+  name text unique not null,
+  description text,
+  enabled boolean not null default true,
+  pricing_mode text not null default 'free' check (pricing_mode in ('free','paid')),
+  price numeric(10,2) not null default 0 check (price >= 0),
+  ai_instructions text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.service_requests (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid not null references public.profiles(id) on delete cascade,
+  service_id uuid references public.service_catalog(id) on delete set null,
+  service_name text not null,
+  question text not null,
+  birth_date date,
+  birth_time time,
+  birth_place text,
+  pricing_mode text not null default 'free' check (pricing_mode in ('free','paid')),
+  price numeric(10,2) not null default 0,
+  payment_status text not null default 'not_required' check (payment_status in ('not_required','pending','paid','failed','refunded')),
+  status text not null default 'queued' check (status in ('queued','awaiting_payment','in_progress','completed','cancelled')),
+  ai_answer text,
+  admin_answer text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+insert into public.service_catalog (name,description,ai_instructions) values
+('Birth Chart Analysis','Explore planetary influences and important life themes.','Give a careful birth-chart-oriented interpretation based only on the information supplied. Clearly distinguish reflective astrology from factual certainty.'),
+('Love & Marriage','Reflect on relationships, compatibility and emotional patterns.','Provide a thoughtful relationship-focused astrology interpretation based on supplied details. Avoid claiming certainty about another person’s private thoughts or future actions.'),
+('Career Astrology','Gain perspective on work, direction and opportunities.','Provide a reflective career astrology interpretation based on supplied details. Avoid guarantees about employment, income or specific future events.'),
+('Life Guidance','Discover reflective insights for important decisions.','Provide reflective guidance using the supplied context and astrology framing. Encourage informed personal decisions rather than presenting predictions as certainties.'),
+('Numerology','Explore the symbolic meaning of numbers in your life.','Provide a numerology interpretation from the supplied information and clearly frame it as symbolic guidance.'),
+('Vastu Consultation','Guidance on spaces, balance and traditional Vastu principles.','Provide traditional Vastu-oriented guidance from the supplied information. Avoid claims that it guarantees health, wealth or other outcomes.')
+on conflict (name) do nothing;
+alter table public.service_catalog enable row level security;
+alter table public.service_requests enable row level security;
+create policy if not exists "public enabled services read" on public.service_catalog for select to anon, authenticated using (enabled=true or public.is_admin());
+create policy if not exists "admin manage services" on public.service_catalog for all to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy if not exists "customer own service requests" on public.service_requests for select to authenticated using (customer_id=auth.uid() or public.is_admin());
+create policy if not exists "customer create service requests" on public.service_requests for insert to authenticated with check (customer_id=auth.uid());
+create policy if not exists "admin manage service requests" on public.service_requests for all to authenticated using (public.is_admin()) with check (public.is_admin());
+grant select on public.service_catalog to anon, authenticated;
+grant select,insert on public.service_requests to authenticated;
