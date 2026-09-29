@@ -50,7 +50,7 @@
     <button class="admin-nav" data-section="readings">✧ Readings</button>
     <button class="admin-nav" data-section="services">☾ Services & AI</button>
     <button class="admin-nav" data-section="appointments">◷ Appointments</button>
-    <button class="admin-nav" data-section="messages">✉ Messages</button>
+    <button class="admin-nav" data-section="messages">✉ Messages</button><button class="admin-nav" data-section="directChats">💬 Direct Chats</button>
     <button class="admin-nav" data-section="settings">⚙ Settings</button>
     <a class="admin-home" href="index.html">← Back to Home</a>
   </aside>
@@ -101,7 +101,11 @@
         <div id="serviceRequestsAdmin"><p class="muted">Loading requests…</p></div>
       </article>
     </section>
-    <section class="admin-section" id="appointments">
+    <section class="admin-section" id="directChats">
+  <div class="page-heading"><div><span class="eyebrow">LIVE CUSTOMER COMMUNICATION</span><h1>Direct Chats</h1><p>See public conversations and personally reply to visitors in real time.</p></div></div>
+  <article class="admin-card"><div id="publicChatsAdmin"><p class="muted">Loading direct conversations…</p></div></article>
+</section>
+<section class="admin-section" id="appointments">
       <div class="page-heading"><div><span class="eyebrow">SCHEDULE MANAGEMENT</span><h1>Appointments</h1><p>View and manage real appointment records stored in the database.</p></div></div>
       <article class="admin-card"><div class="table-wrap"><table><thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody id="appointmentsBody"><tr><td colspan="5">Loading appointments…</td></tr></tbody></table></div></article>
     </section>
@@ -172,5 +176,30 @@
 })();
 </script>
 
-</body>
+<script>
+(function(){
+const sb=window.supabaseClient;const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function loadPublicChats(){
+ const root=document.getElementById("publicChatsAdmin");if(!root||!sb)return;
+ const {data,error}=await sb.from("public_conversations").select("id,visitor_name,phone,email,status,created_at,updated_at").order("updated_at",{ascending:false}).limit(50);
+ if(error){root.innerHTML="<p>"+esc(error.message)+"</p>";return;}
+ if(!data?.length){root.innerHTML="<p class='muted'>No direct conversations yet.</p>";return;}
+ const ids=data.map(x=>x.id);
+ const {data:msgs}=await sb.from("public_conversation_messages").select("conversation_id,sender,message,created_at").in("conversation_id",ids).order("created_at",{ascending:true});
+ root.innerHTML=data.map(x=>{
+   const list=(msgs||[]).filter(m=>m.conversation_id===x.id);
+   return '<div class="request-admin" data-chat="'+x.id+'"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>'+esc(x.visitor_name)+'</strong><span class="status '+(x.status==="replied"?"active-status":"pending-status")+'">'+esc(x.status)+'</span></div><div class="request-meta"><span>Mobile: '+esc(x.phone)+'</span><span>Email: '+esc(x.email)+'</span><span>Started: '+esc(new Date(x.created_at).toLocaleString())+'</span></div><div class="request-question" style="max-height:260px;overflow:auto">'+list.map(m=>'<p><strong>'+esc(m.sender==="admin"?"You":x.visitor_name)+':</strong> '+esc(m.message)+'<br><small>'+esc(new Date(m.created_at).toLocaleString())+'</small></p>').join("")+'</div><textarea data-reply="'+x.id+'" rows="4" placeholder="Write your personal reply..."></textarea><button class="btn admin-save" data-send-reply="'+x.id+'">Send Personal Reply</button> <span data-reply-status="'+x.id+'"></span></div>';
+ }).join("");
+ root.querySelectorAll("[data-send-reply]").forEach(btn=>btn.addEventListener("click",async()=>{
+   const id=btn.dataset.sendReply,card=root.querySelector('[data-chat="'+id+'"]'),box=card.querySelector('[data-reply="'+id+'"]'),msg=box.value.trim(),st=card.querySelector('[data-reply-status="'+id+'"]');
+   if(!msg){st.textContent="Write a reply first.";return;}btn.disabled=true;btn.textContent="Sending…";
+   const {error}=await sb.from("public_conversation_messages").insert({conversation_id:id,sender:"admin",message:msg});
+   if(!error)await sb.from("public_conversations").update({status:"replied",updated_at:new Date().toISOString()}).eq("id",id);
+   st.textContent=error?error.message:"Reply sent.";if(!error){box.value="";await loadPublicChats();}btn.disabled=false;btn.textContent="Send Personal Reply";
+ }));
+}
+window.loadPublicChats=loadPublicChats;
+document.addEventListener("DOMContentLoaded",()=>setTimeout(loadPublicChats,500));
+})();
+</script></body>
 </html>
