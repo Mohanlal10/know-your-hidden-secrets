@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ask More — 10 Minute Session | Know Your Hidden Secrets and Future</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at 50% 0,#3a245f 0,#17142d 42%,#080914 85%);color:#fff;min-height:100vh}
+.wrap{width:min(820px,92%);margin:auto;padding:34px 0 55px}.brand{text-align:center;color:#d8b56b;font-weight:900;letter-spacing:1.5px;font-size:14px}.card{margin-top:25px;background:#fff;color:#211b2c;border-radius:24px;padding:30px;box-shadow:0 25px 80px #0008}.head{text-align:center}.head .icon{font-size:40px;color:#b58a42}.head h1{font:38px Georgia,serif;margin:8px 0}.head p{color:#6e6875;margin:0 auto;max-width:650px}.timer{margin:24px auto 20px;width:min(310px,100%);text-align:center;background:#11152a;color:#fff;border:1px solid #d8b56b66;border-radius:18px;padding:16px}.timer-label{font-size:11px;letter-spacing:2px;color:#c9c1d6;font-weight:800}.time{font-size:42px;font-weight:900;color:#d8b56b;line-height:1.1;margin-top:5px;font-variant-numeric:tabular-nums}.time.warning{color:#ff8b8b}.progress{height:5px;background:#302943;border-radius:99px;overflow:hidden;margin-top:10px}.progress span{display:block;height:100%;width:100%;background:#d8b56b;transform-origin:left;transition:width 1s linear}.notice{background:#f5f1fb;border:1px solid #e2d6eb;border-radius:12px;padding:13px 15px;color:#5d5367;margin:20px 0;font-size:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field{margin-bottom:15px}.field.full{grid-column:1/-1}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}.field input,.field textarea{width:100%;padding:12px;border:1px solid #ddd4e5;border-radius:10px;font:inherit}.field textarea{min-height:150px;resize:vertical}.field input:focus,.field textarea:focus{outline:none;border-color:#d8b56b;box-shadow:0 0 0 3px #d8b56b26}.btn{width:100%;padding:14px;border:0;border-radius:10px;background:#d8b56b;color:#17131e;font-weight:900;font-size:15px;cursor:pointer}.btn:disabled{opacity:.55;cursor:not-allowed}.status{margin-top:16px;padding:13px 15px;border-radius:10px;white-space:pre-wrap;font-weight:700}.success{background:#e9f7ef;color:#217a49}.error{background:#fff0f0;color:#a23a3a}.info{background:#f5f1fb;color:#5f4c1f}.hidden{display:none}.footer{text-align:center;color:#aaa6b4;font-size:12px;margin-top:20px}.footer a{color:#d8b56b}@media(max-width:650px){.card{padding:22px}.head h1{font-size:31px}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}.time{font-size:38px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="brand">✦ KNOW YOUR HIDDEN SECRETS AND FUTURE ✦</div>
+<section class="card">
+<div class="head">
+<div class="icon">☾ ✦ ☼</div>
+<h1>Ask More</h1>
+<p>Start a private question session and send your question directly to our team.</p>
+</div>
+<div id="timerBox" class="timer hidden">
+<div class="timer-label">TIME REMAINING</div>
+<div id="time" class="time">10:00</div>
+<div class="progress"><span id="progress"></span></div>
+</div>
+<div id="startArea">
+<div class="notice"><strong>10-minute session:</strong> Your timer begins only when you click “Start My 10-Minute Session”. You do not need a customer account to ask a question.</div>
+<button id="startBtn" class="btn" type="button">💬 Start My 10-Minute Session</button>
+</div>
+<form id="questionForm" class="hidden">
+<div class="notice">Please complete and submit your question before the timer reaches zero. Your question will be sent to our secure notification service.</div>
+<div class="grid">
+<div class="field"><label for="name">Full Name *</label><input id="name" maxlength="120" required autocomplete="name"></div>
+<div class="field"><label for="phone">Mobile Number *</label><input id="phone" maxlength="30" required autocomplete="tel" inputmode="tel"></div>
+<div class="field full"><label for="email">Email Address *</label><input id="email" type="email" maxlength="200" required autocomplete="email"></div>
+<div class="field full"><label for="question">Your Question *</label><textarea id="question" maxlength="5000" required placeholder="Write your question clearly..."></textarea></div>
+</div>
+<button id="sendBtn" class="btn" type="submit">✦ Send My Question</button>
+<div id="status" class="status hidden"></div>
+</form>
+</section>
+<div class="footer"><a href="index.html">← Back to website</a><br><br>Astrology • Guidance • Self-Discovery</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+(function(){
+const SESSION_SECONDS=600;
+const startBtn=document.getElementById("startBtn"),startArea=document.getElementById("startArea"),form=document.getElementById("questionForm");
+const timerBox=document.getElementById("timerBox"),timeEl=document.getElementById("time"),progress=document.getElementById("progress"),status=document.getElementById("status"),sendBtn=document.getElementById("sendBtn");
+let startedAt=0,expiresAt=0,timer=null,sessionToken="";
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function showStatus(msg,type){status.className="status "+type;status.textContent=msg;status.classList.remove("hidden");}
+function setTime(left){left=Math.max(0,left);const m=Math.floor(left/60),s=left%60;timeEl.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");progress.style.width=(left/SESSION_SECONDS*100)+"%";timeEl.classList.toggle("warning",left<=60);}
+function stopTimer(){if(timer){clearInterval(timer);timer=null;}}
+function expire(){stopTimer();sendBtn.disabled=true;showStatus("Your 10-minute session has ended. Start a new session if you would like to ask another question.","error");}
+function tick(){const left=Math.ceil((expiresAt-Date.now())/1000);if(left<=0){setTime(0);expire();return;}setTime(left);}
+startBtn.addEventListener("click",async()=>{
+  startBtn.disabled=true;startBtn.textContent="Starting…";
+  try{
+    if(!window.supabaseClient)throw new Error("Secure service connection is not configured.");
+    const {data,error}=await window.supabaseClient.functions.invoke("send-public-question",{body:{action:"start"}});
+    if(error||!data?.success)throw new Error(data?.error||error?.message||"Unable to start the session.");
+    sessionToken=data.session_token;startedAt=Date.now();expiresAt=startedAt+SESSION_SECONDS*1000;
+    startArea.classList.add("hidden");timerBox.classList.remove("hidden");form.classList.remove("hidden");form.querySelector("#name").focus();
+    setTime(SESSION_SECONDS);timer=setInterval(tick,250);
+  }catch(e){showStatus(e.message||"Unable to start the session.","error");startBtn.disabled=false;startBtn.textContent="💬 Start My 10-Minute Session";}
+});
+form.addEventListener("submit",async e=>{
+ e.preventDefault();if(Date.now()>=expiresAt){expire();return;}
+ const name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),email=document.getElementById("email").value.trim(),question=document.getElementById("question").value.trim();
+ if(!name||!phone||!email||!question){form.reportValidity();return;}
+ sendBtn.disabled=true;sendBtn.textContent="Sending…";showStatus("Sending your question securely…","info");
+ try{
+   const {data,error}=await window.supabaseClient.functions.invoke("send-public-question",{body:{action:"submit",session_token:sessionToken,name,phone,email,question,started_at:new Date(startedAt).toISOString()}});
+   if(error||!data?.success)throw new Error(data?.error||error?.message||"Unable to send your question.");
+   stopTimer();setTime(0);showStatus(data.message||"Your question has been sent successfully. You will be contacted soon.","success");
+   form.reset();form.querySelectorAll("input,textarea").forEach(x=>x.disabled=true);sendBtn.textContent="Question Sent ✓";
+ }catch(e){sendBtn.disabled=false;sendBtn.textContent="✦ Send My Question";showStatus(e.message||"Unable to send your question. Please try again.","error");}
+});
+})();
+</script>
+</body>
+</html>
