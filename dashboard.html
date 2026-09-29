@@ -1,1 +1,28 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Customer Dashboard</title><link rel="stylesheet" href="styles.css"></head><body><header><h2>KNOW YOUR HIDDEN SECRETS AND FUTURE</h2></header><main class="dashboard"><aside><h3>Customer</h3><p>Overview</p><p>My Readings</p><p>Messages</p><p>Profile</p></aside><section><h1>Welcome back.</h1><div class="stats"><div><b>03</b> Readings</div><div><b>02</b> Messages</div><div><b>01</b> Upcoming</div></div><article><h2>Latest message</h2><p>Your personalised consultation message will appear here.</p></article></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customer Dashboard | Know Your Hidden Secrets and Future</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar"><div><h2>KNOW YOUR HIDDEN SECRETS AND FUTURE</h2><span>Personal Astrology & AI Guidance</span></div></header>
+<main class="dashboard">
+<aside class="sidebar"><h3>Customer</h3><p class="side-active">✦ Overview</p><p>✧ My Readings</p><p>✧ Messages</p><p>✧ Profile</p><button class="btn full" onclick="location.href='index.html'">Back to Home</button></aside>
+<section class="dashboard-content">
+<div class="welcome-hero">
+<div><span class="eyebrow">AI WELCOME GUIDE</span><h1>Welcome to your personal space.</h1><p>Explore your hidden secrets, understand your present, and look toward your future with clarity.</p></div>
+<div class="ai-orb">✦</div>
+</div>
+<div class="ai-card">
+<div class="ai-title"><span class="ai-icon">✦</span><div><h2>AI Astrology Guide</h2><small>Ready to assist you</small></div></div>
+<div id="aiWelcome" class="ai-message">Welcome to our channel, know your hidden secrets and about future with clarity.</div>
+<div class="ai-actions"><button class="btn" id="askAi">Ask AI Guide</button><button class="btn secondary" onclick="document.getElementById('aiQuestion').focus()">Ask a Question</button></div>
+<div class="ai-input"><input id="aiQuestion" type="text" placeholder="Ask about your reading, relationships, career or future..."><button class="btn" id="sendAi">Send</button></div>
+</div>
+<div class="stats"><div><b>03</b><span>Readings</span></div><div><b>02</b><span>Messages</span></div><div><b>01</b><span>Upcoming</span></div></div>
+<article><h2>Latest message</h2><p>Your personalised consultation message will appear here. Our AI guide can provide an introductory response while your detailed reading is prepared.</p></article>
+</section>
+</main>
+<script src="app.js"></script>
+</body></html>
